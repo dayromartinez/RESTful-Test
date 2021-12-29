@@ -64,7 +64,29 @@ class WidgetRestControllerTest {
                 .andExpect(jsonPath("$[1].version", is(4)));
     }
 
+    @Test
+    @DisplayName("GET /widgetid success")
+    void testGetWidgetIdSuccess() throws Exception {
+        // Setup our mocked service
+        Widget widget1 = new Widget(1l, "Widget Name", "Description", 1);
+        doReturn(Optional.of(widget1)).when(service).findById(widget1.getId());
 
+        // Execute the GET request
+        mockMvc.perform(get("/rest/widget/{id}", 1L))
+                // Validate the response code and content type
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+
+                // Validate headers
+                .andExpect(header().string(HttpHeaders.LOCATION, "/rest/widget/1"))
+                .andExpect(header().string(HttpHeaders.ETAG, "\"1\""))
+
+                // Validate the returned fields
+                .andExpect(jsonPath("$.id", is(1)))
+                .andExpect(jsonPath("$.name", is("Widget Name")))
+                .andExpect(jsonPath("$.description", is("Description")))
+                .andExpect(jsonPath("$.version", is(1)));
+    }
 
     @Test
     @DisplayName("GET /rest/widget/1 - Not Found")
@@ -104,6 +126,35 @@ class WidgetRestControllerTest {
                 .andExpect(jsonPath("$.name", is("New Widget")))
                 .andExpect(jsonPath("$.description", is("This is my widget")))
                 .andExpect(jsonPath("$.version", is(1)));
+    }
+
+    @Test
+    @DisplayName("PUT /rest/widget/{id}")
+    void testUpdateWidget() throws Exception {
+        // Setup our mocked service
+        Widget widgetToPut = new Widget(1L, "New Widget","This is my widget", 1);
+        Widget widgetToReturn = new Widget(1L, "Widget Update", "This is my update widget", 2);
+        doReturn(Optional.of(widgetToPut)).when(service).findById(widgetToPut.getId());
+        doReturn(widgetToReturn).when(service).save(any());
+
+        // Execute the PUT request
+        mockMvc.perform(put("/rest/widget/{id}", widgetToPut.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJsonString(widgetToReturn)))
+
+                // Validate the response code and content type
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+
+                // Validate headers
+                .andExpect(header().string(HttpHeaders.LOCATION, "/rest/widget/1"))
+                .andExpect(header().string(HttpHeaders.ETAG, "\"2\""))
+
+                // Validate the returned fields
+                .andExpect(jsonPath("$.id", is(1)))
+                .andExpect(jsonPath("$.name", is("Widget Update")))
+                .andExpect(jsonPath("$.description", is("This is my update widget")))
+                .andExpect(jsonPath("$.version", is(2)));
     }
 
 

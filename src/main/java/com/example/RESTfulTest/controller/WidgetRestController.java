@@ -66,16 +66,11 @@ public class WidgetRestController {
     }
 
     @PutMapping("/rest/widget/{id}")
-    public ResponseEntity<Widget> updateWidget(@RequestBody Widget widget, @PathVariable Long id, @RequestHeader(HttpHeaders.IF_MATCH) String ifMatch) {
+    public ResponseEntity<Widget> updateWidget(@RequestBody Widget widget, @PathVariable Long id) {
         // Get the widget with the specified id
         Optional<Widget> existingWidget = widgetService.findById(id);
         if (!existingWidget.isPresent()) {
             return ResponseEntity.notFound().build();
-        }
-
-        // Validate that the if-match header matches the widget's version
-        if (!ifMatch.equalsIgnoreCase(Integer.toString(existingWidget.get().getVersion()))) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
 
         // Update the widget
